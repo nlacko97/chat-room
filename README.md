@@ -15,7 +15,7 @@ git clone https://github.com/nlacko97/chat-room.git
 # How to use
 
 Build the project by running the `make` command.
-Do not use the ####server.c file.
+Do not use the server.c file.
 Run the server with ./select-server
 From a separate command window, run the client with ./client
 You can run multiple clients at once.
