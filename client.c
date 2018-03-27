@@ -27,7 +27,8 @@
 
 #define PORT "22000"
 #define HOST "localhost"
-#define BUFSIZE 256
+#define BUFSIZE 1024
+#define MAX_PERSON_NAME 100
 int sockfd;
 
 void
@@ -51,7 +52,7 @@ void *
 readFromServer(void *x)
 {
   int fd = *(int *)x;
-  char *recvline = malloc(BUFSIZE * sizeof(char*));
+  char *recvline = malloc(BUFSIZE * sizeof(char));
   while(1)
   {
     bzero(recvline, BUFSIZE);
@@ -60,6 +61,7 @@ readFromServer(void *x)
       break;
     printf("\r%s\n", recvline);
   }
+  free(recvline);
   signalExit();
   return 0;
 }
@@ -110,39 +112,44 @@ main(int argc, char **argv)
   // inet_pton(AF_INET, "::1", &(servaddr.sin_addr));
 
   int b;
-  char *sendline = (char*)malloc(BUFSIZE * sizeof(char*));
-  char recvline[100];
+  char *sendline = (char*)malloc(BUFSIZE * sizeof(char));
   bzero(sendline, BUFSIZE);
   printf("*******************************************************\n");
   printf("--------------->>>>>>>>>ChatRoom<<<<<<<<<--------------\n");
   printf("Succesfully connected to server!\n");
-  printf("Please write in your name\n");
+  printf("Please write in your name(maximum 100 characters)\n");
   b = read(0, sendline, BUFSIZE);
   if (b == -1)
   {
     perror("Error reading username");
     signalExit();
   }
-  sendline[b - 1] = '\0';
-  if (write(sockfd, sendline, b - 1) == -1)
+  if (b - 1 < MAX_PERSON_NAME)
+    b = b - 1;
+  else
+    b = MAX_PERSON_NAME - 1;
+  sendline[b] = '\0';
+  if (write(sockfd, sendline, b ) == -1)
   {
     perror("Error writing username");
     signalExit();
   }
-  pthread_t t;
+  printf("\tlen:%d\n",b);
   printf("\n\t Welcome %s! Now you can write and receive messages from the group!\n\n", sendline);
+  memset(sendline, (char)0, BUFSIZE);
+  // sendline[0] = '\0';
+  pthread_t t;
   if (pthread_create(&t, NULL, readFromServer, (void *)&sockfd))
   {
     perror("Could not create listener thread");
     signalExit();
   }
+  sendline = (char*)realloc(sendline, BUFSIZE*sizeof(char));
   while(1)
   {
-    bzero(sendline, 100);
-    bzero(recvline, 100);
-    if (read(0, sendline, 100) == -1)
+    bzero(sendline, BUFSIZE);
+    if (read(0, sendline, BUFSIZE) == -1)
     {
-
       signalExit();
     }
     sendline[strlen(sendline) - 1] = '\0';

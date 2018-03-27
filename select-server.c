@@ -27,7 +27,7 @@
 */
 
 
-#define MAX_PERSON_NAME 30
+#define MAX_PERSON_NAME 100
 #define MAX_CLIENTS 20
 #define BUFSIZE 256
 #define PORT "22000"
@@ -111,7 +111,7 @@ main(int argc, char const *argv[])
 
   for(int i = 0;  i < MAX_CLIENTS; i++)
   {
-    strcpy(clients[i].name, "");
+    memset(clients[i].name, 0, MAX_PERSON_NAME);
     clients[i].socket = 0;
   }
 
@@ -175,8 +175,8 @@ main(int argc, char const *argv[])
         if (!clients[i].socket)
         {
           clients[i].socket = clientfd;
-          read(clientfd, buf, MAX_PERSON_NAME);
-          strcpy(clients[i].name, buf);
+          int bb = read(clientfd, buf, BUFSIZE);
+          memcpy(clients[i].name, buf, bb);
           break;
         }
       }
